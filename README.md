@@ -8,7 +8,7 @@ This is an fork from the original bundle created by vmelnik-ukrain (Many thanks 
 
 I improved several things, i make better use of the doctrine events. and it works with lazy loading (relationships)!
 This will be an long term project we will be working on with long-term support and backward compatibility. We are using this bundle in all our own symfony2 project.
-More about us can be found on our website. [Ambta.com](https://ambta.com)
+More about us can be found on our website. [Paymaxi.com](https://paymaxi.com)
 
 ###What does it do exactly
 
@@ -43,11 +43,11 @@ All encryption/decryption work on the server side.
 
 The following documents are available:
 
-* [Installation](https://github.com/ambta/DoctrineEncryptBundle/blob/master/Resources/doc/installation.md)
-* [Configuration](https://github.com/ambta/DoctrineEncryptBundle/blob/master/Resources/doc/configuration.md)
-* [Usage](https://github.com/ambta/DoctrineEncryptBundle/blob/master/Resources/doc/usage.md)
-* [Console commands](https://github.com/ambta/DoctrineEncryptBundle/blob/master/Resources/doc/commands.md)
-* [Custom encryption class](https://github.com/ambta/DoctrineEncryptBundle/blob/master/Resources/doc/custom_encryptor.md)
+* [Installation](https://github.com/paymaxi/DoctrineEncryptBundle/blob/master/Resources/doc/installation.md)
+* [Configuration](https://github.com/paymaxi/DoctrineEncryptBundle/blob/master/Resources/doc/configuration.md)
+* [Usage](https://github.com/paymaxi/DoctrineEncryptBundle/blob/master/Resources/doc/usage.md)
+* [Console commands](https://github.com/paymaxi/DoctrineEncryptBundle/blob/master/Resources/doc/commands.md)
+* [Custom encryption class](https://github.com/paymaxi/DoctrineEncryptBundle/blob/master/Resources/doc/custom_encryptor.md)
 
 ###License
 

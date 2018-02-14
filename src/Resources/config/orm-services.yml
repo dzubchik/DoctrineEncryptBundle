@@ -1,0 +1,13 @@
+services:
+    paymaxi_doctrine_encrypt.orm_subscriber:
+        class: Paymaxi\DoctrineEncryptBundle\Subscribers\DoctrineEncryptSubscriber
+        arguments: ["@doctrine.orm.entity_manager", "%paymaxi_doctrine_encrypt.encryptor_class_name%", "%paymaxi_doctrine_encrypt.secret_key%"]
+        tags:
+            -  { name: doctrine.event_subscriber }
+    paymaxi_doctrine_encrypt.subscriber:
+        alias: paymaxi_doctrine_encrypt.orm_subscriber
+    paymaxi_doctrine_encrypt.encryptor:
+        class: Paymaxi\DoctrineEncryptBundle\Services\Encryptor
+        arguments:
+            - "%paymaxi_doctrine_encrypt.encryptor_class_name%"
+            - "%paymaxi_doctrine_encrypt.secret_key%"
