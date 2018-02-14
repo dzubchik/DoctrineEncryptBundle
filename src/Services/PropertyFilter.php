@@ -15,7 +15,7 @@ final class PropertyFilter
     /**
      * @param ClassMetadata $metadata
      *
-     * @return array
+     * @return \ReflectionProperty[]
      * @throws \Doctrine\ORM\Mapping\MappingException
      * @throws \ReflectionException
      */

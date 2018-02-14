@@ -2,8 +2,6 @@
 
 namespace Paymaxi\DoctrineEncryptBundle\Subscribers;
 
-use Paymaxi\DoctrineEncryptBundle\Encryptors\EncryptorInterface;
-use Paymaxi\DoctrineEncryptBundle\Services\PropertyFilter;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Proxy\Proxy;
 use Doctrine\ORM\EntityManager;
@@ -12,6 +10,8 @@ use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Events;
+use Paymaxi\DoctrineEncryptBundle\Encryptors\EncryptorInterface;
+use Paymaxi\DoctrineEncryptBundle\Services\PropertyFilter;
 use ReflectionClass;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 
@@ -88,11 +88,15 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     /**
      * Change the encryptor
      *
-     * @param $encryptorClass
+     * @param string|null $encryptorClass
      */
-    public function setEncryptor(string $encryptorClass): void
+    public function setEncryptor($encryptorClass): void
     {
-        $this->encryptor = $this->encryptorFactory($encryptorClass, $this->secretKey);
+        if (null === $encryptorClass) {
+            $this->encryptor = $encryptorClass;
+        } else {
+            $this->encryptor = $this->encryptorFactory($encryptorClass, $this->secretKey);
+        }
     }
 
     /**
@@ -232,16 +236,17 @@ class DoctrineEncryptSubscriber implements EventSubscriber
             $accessor = new PropertyAccessor();
             
             //Foreach property in the reflection class
-            foreach ($properties as $refProperty) {
+            foreach ($properties as $property) {
+                $propertyName = $property->getName();
                 /**
                  * If followed standards, method name is getPropertyName, the propertyName is lowerCamelCase
                  * So just uppercase first character of the property, later on get and set{$methodName} wil be used
                  */
-                if (!$accessor->isReadable($entity, $refProperty)) {
+                if (!$accessor->isReadable($entity, $propertyName)) {
                     throw new \RuntimeException('Property could not be read.');
                 }
 
-                $getInformation = $accessor->getValue($entity, $refProperty);
+                $getInformation = $accessor->getValue($entity, $propertyName);
 
                 /**
                  * Then decrypt, encrypt the information if not empty, information is an string and the <ENC> tag is there (decrypt) or not (encrypt).
@@ -252,7 +257,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
                         if ('<ENC>' === substr($getInformation, -5)) {
                             $this->decryptCounter++;
                             $currentPropValue = $this->encryptor->decrypt(substr($getInformation, 0, -5));
-                            $accessor->setValue($entity, $refProperty, $currentPropValue);
+                            $accessor->setValue($entity, $propertyName, $currentPropValue);
                         }
                     }
                 } else {
@@ -260,7 +265,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
                         if ('<ENC>' !== substr($getInformation, -5)) {
                             $this->encryptCounter++;
                             $currentPropValue = $this->encryptor->encrypt($getInformation);
-                            $accessor->setValue($entity, $refProperty, $currentPropValue);
+                            $accessor->setValue($entity, $propertyName, $currentPropValue);
                         }
                     }
                 }

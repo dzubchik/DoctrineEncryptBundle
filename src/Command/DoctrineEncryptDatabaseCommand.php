@@ -3,6 +3,7 @@
 namespace Paymaxi\DoctrineEncryptBundle\Command;
 
 use Paymaxi\DoctrineEncryptBundle\DependencyInjection\DoctrineEncryptExtension;
+use Paymaxi\DoctrineEncryptBundle\Encryptors\AES256Encryptor;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,7 +27,7 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
         $this
             ->setName('doctrine:encrypt:database')
             ->setDescription('Encrypt whole database on tables which are not encrypted yet')
-            ->addArgument('encryptor', InputArgument::OPTIONAL, 'The encryptor you want to decrypt the database with')
+            ->addArgument('encryptor', InputArgument::OPTIONAL, 'The encryptor you want to decrypt the database with', AES256Encryptor::METHOD_NAME)
             ->addArgument('batchSize', InputArgument::OPTIONAL, 'The update/flush batch size', 20);
     }
 
