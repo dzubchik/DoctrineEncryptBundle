@@ -16,7 +16,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Paymaxi\\DoctrineEncryptBundle\\": "tests/"
+            "Paymaxi\\DoctrineEncryptBundle\\Tests\\": "tests/"
         }
     },
     "require-dev": {
