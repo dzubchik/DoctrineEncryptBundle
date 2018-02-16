@@ -20,6 +20,11 @@ use Symfony\Component\PropertyAccess\PropertyAccessor;
  */
 class DoctrineEncryptSubscriber implements EventSubscriber
 {
+    /** @var array */
+    private static $ignore = [];
+
+    /** @var array */
+    private static $cachedProperties = [];
 
     /**
      * Encryptor interface namespace
@@ -28,6 +33,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
 
     /**
      * Encryptor
+     *
      * @var EncryptorInterface
      */
     private $encryptor;
@@ -39,40 +45,51 @@ class DoctrineEncryptSubscriber implements EventSubscriber
 
     /**
      * Secret key
+     *
      * @var string
      */
     private $secretKey;
 
     /**
      * Used for restoring the encryptor after changing it
+     *
      * @var string
      */
     private $restoreEncryptor;
 
     /**
      * Count amount of decrypted values in this service
+     *
      * @var integer
      */
     public $decryptCounter = 0;
 
     /**
      * Count amount of encrypted values in this service
+     *
      * @var integer
      */
     public $encryptCounter = 0;
+
+    /** @var PropertyAccessor */
+    private $accessor;
 
     /**
      * Initialization of subscriber
      *
      * @param EntityManager $entityManager
-     * @param string $encryptorClass  The encryptor class.  This can be empty if a service is being provided.
+     * @param string $encryptorClass The encryptor class.  This can be empty if a service is being provided.
      * @param string $secretKey The secret key.
      * @param EncryptorInterface|NULL $service (Optional)  An EncryptorInterface.
      *
      * This allows for the use of dependency injection for the encrypters.
      */
-    public function __construct(EntityManager $entityManager, $encryptorClass, $secretKey, EncryptorInterface $service = null)
-    {
+    public function __construct(
+        EntityManager $entityManager,
+        $encryptorClass,
+        $secretKey,
+        EncryptorInterface $service = null
+    ) {
         $this->entityManager = $entityManager;
         $this->secretKey = $secretKey;
 
@@ -83,6 +100,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
         }
 
         $this->restoreEncryptor = $this->encryptor;
+        $this->accessor = new PropertyAccessor();
     }
 
     /**
@@ -226,55 +244,63 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function processFields($entity, $isEncryptOperation = true)
     {
-        if (!empty($this->encryptor)) {
+        $class = \get_class($entity);
 
-            //Check which operation to be used
-            $encryptorMethod = $isEncryptOperation ? 'encrypt' : 'decrypt';
+        if (null === $this->encryptor || in_array($class, self::$ignore)) {
+            return null;
+        }
 
-            $metadata = $this->entityManager->getClassMetadata(\get_class($entity));
+        if (false === array_key_exists($class, self::$cachedProperties)) {
+            $metadata = $this->entityManager->getClassMetadata($class);
             $properties = PropertyFilter::filter($metadata);
-            $accessor = new PropertyAccessor();
-            
-            //Foreach property in the reflection class
-            foreach ($properties as $property) {
-                $propertyName = $property->getName();
-                /**
-                 * If followed standards, method name is getPropertyName, the propertyName is lowerCamelCase
-                 * So just uppercase first character of the property, later on get and set{$methodName} wil be used
-                 */
-                if (!$accessor->isReadable($entity, $propertyName)) {
-                    throw new \RuntimeException('Property could not be read.');
-                }
 
-                $getInformation = $accessor->getValue($entity, $propertyName);
+            self::$cachedProperties[$class] = $properties;
+        }
 
-                /**
-                 * Then decrypt, encrypt the information if not empty, information is an string and the <ENC> tag is there (decrypt) or not (encrypt).
-                 * The <ENC> will be added at the end of an encrypted string so it is marked as encrypted. Also protects against double encryption/decryption
-                 */
-                if ('decrypt' === $encryptorMethod) {
-                    if (null !== $getInformation and !empty($getInformation)) {
-                        if ('<ENC>' === substr($getInformation, -5)) {
-                            $this->decryptCounter++;
-                            $currentPropValue = $this->encryptor->decrypt(substr($getInformation, 0, -5));
-                            $accessor->setValue($entity, $propertyName, $currentPropValue);
-                        }
+        /** @var \ReflectionProperty[] $properties */
+        $properties = self::$cachedProperties[$class];
+        $accessor = $this->accessor;
+
+        //Check which operation to be used
+        $encryptorMethod = $isEncryptOperation ? 'encrypt' : 'decrypt';
+
+        //Foreach property in the reflection class
+        foreach ($properties as $property) {
+            $propertyName = $property->getName();
+            /**
+             * If followed standards, method name is getPropertyName, the propertyName is lowerCamelCase
+             * So just uppercase first character of the property, later on get and set{$methodName} wil be used
+             */
+            if (!$accessor->isReadable($entity, $propertyName)) {
+                throw new \RuntimeException('Property could not be read.');
+            }
+
+            $getInformation = $accessor->getValue($entity, $propertyName);
+
+            /**
+             * Then decrypt, encrypt the information if not empty, information is an string and the <ENC> tag is there (decrypt) or not (encrypt).
+             * The <ENC> will be added at the end of an encrypted string so it is marked as encrypted. Also protects against double encryption/decryption
+             */
+            if ('decrypt' === $encryptorMethod) {
+                if (null !== $getInformation and !empty($getInformation)) {
+                    if ('<ENC>' === substr($getInformation, -5)) {
+                        $this->decryptCounter++;
+                        $currentPropValue = $this->encryptor->decrypt(substr($getInformation, 0, -5));
+                        $accessor->setValue($entity, $propertyName, $currentPropValue);
                     }
-                } else {
-                    if (null !== $getInformation and !empty($getInformation)) {
-                        if ('<ENC>' !== substr($getInformation, -5)) {
-                            $this->encryptCounter++;
-                            $currentPropValue = $this->encryptor->encrypt($getInformation);
-                            $accessor->setValue($entity, $propertyName, $currentPropValue);
-                        }
+                }
+            } else {
+                if (null !== $getInformation and !empty($getInformation)) {
+                    if ('<ENC>' !== substr($getInformation, -5)) {
+                        $this->encryptCounter++;
+                        $currentPropValue = $this->encryptor->encrypt($getInformation);
+                        $accessor->setValue($entity, $propertyName, $currentPropValue);
                     }
                 }
             }
-
-            return $entity;
         }
 
-        return null;
+        return $entity;
     }
 
     /**
