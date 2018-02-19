@@ -26,6 +26,9 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     /** @var array */
     private static $cachedProperties = [];
 
+    /** @var array */
+    private static $secureEntities = [];
+
     /**
      * Encryptor interface namespace
      */
@@ -172,8 +175,6 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function postLoad(LifecycleEventArgs $args): void
     {
-
-        //Get entity and process fields
         $entity = $args->getEntity();
         $this->processFields($entity, false);
     }
@@ -188,6 +189,10 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     {
         $unitOfWork = $preFlushEventArgs->getEntityManager()->getUnitOfWork();
         foreach ($unitOfWork->getIdentityMap() as $className => $entities) {
+            if (!$this->isSecureAwareEntity($className)) {
+                continue;
+            }
+
             $class = $preFlushEventArgs->getEntityManager()->getClassMetadata($className);
             if ($class->isReadOnly) {
                 continue;
@@ -250,15 +255,12 @@ class DoctrineEncryptSubscriber implements EventSubscriber
             return null;
         }
 
-        if (false === array_key_exists($class, self::$cachedProperties)) {
-            $metadata = $this->entityManager->getClassMetadata($class);
-            $properties = PropertyFilter::filter($metadata);
-
-            self::$cachedProperties[$class] = $properties;
+        if (!$this->isSecureAwareEntity($class)) {
+            return null;
         }
 
         /** @var \ReflectionProperty[] $properties */
-        $properties = self::$cachedProperties[$class];
+        $properties = $this->loadProperties($class);
         $accessor = $this->accessor;
 
         //Check which operation to be used
@@ -350,5 +352,42 @@ class DoctrineEncryptSubscriber implements EventSubscriber
         }
 
         throw new \RuntimeException('Encryptor must implements interface EncryptorInterface');
+    }
+
+    /**
+     * @param $class
+     *
+     * @return bool
+     * @throws \Doctrine\ORM\Mapping\MappingException
+     * @throws \ReflectionException
+     */
+    private function isSecureAwareEntity($class): bool
+    {
+        if (false===isset(self::$secureEntities[$class])) {
+            $secure = 0 !== \count($this->loadProperties($class));
+            self::$secureEntities[$class] = $secure;
+        }
+
+        return self::$secureEntities[$class];
+    }
+
+    /**
+     * @param $class
+     *
+     * @return mixed
+     * @throws \Doctrine\ORM\Mapping\MappingException
+     * @throws \ReflectionException
+     */
+    private function loadProperties($class)
+    {
+        if (false === isset(self::$cachedProperties[$class])) {
+            $metadata = $this->entityManager->getClassMetadata($class);
+            $properties = PropertyFilter::filter($metadata);
+
+            self::$cachedProperties[$class] = $properties;
+        }
+
+        /** @var \ReflectionProperty[] $properties */
+        return self::$cachedProperties[$class];
     }
 }
