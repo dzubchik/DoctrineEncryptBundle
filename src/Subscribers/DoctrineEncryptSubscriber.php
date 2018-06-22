@@ -4,6 +4,7 @@ namespace Paymaxi\DoctrineEncryptBundle\Subscribers;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Proxy\Proxy;
+use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
@@ -256,6 +257,12 @@ class DoctrineEncryptSubscriber implements EventSubscriber
         }
 
         if (!$this->isSecureAwareEntity($class)) {
+            return null;
+        }
+
+        $nonProxyClass = ClassUtils::getRealClass($class);
+        if ($nonProxyClass !== $class) {
+            // we work with proxy
             return null;
         }
 
