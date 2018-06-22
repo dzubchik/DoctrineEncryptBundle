@@ -4,8 +4,8 @@ namespace Paymaxi\DoctrineEncryptBundle\Subscribers;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Proxy\Proxy;
-use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Event\PreFlushEventArgs;
@@ -260,12 +260,6 @@ class DoctrineEncryptSubscriber implements EventSubscriber
             return null;
         }
 
-        $nonProxyClass = ClassUtils::getRealClass($class);
-        if ($nonProxyClass !== $class) {
-            // we work with proxy
-            return null;
-        }
-
         /** @var \ReflectionProperty[] $properties */
         $properties = $this->loadProperties($class);
         $accessor = $this->accessor;
@@ -280,8 +274,14 @@ class DoctrineEncryptSubscriber implements EventSubscriber
              * If followed standards, method name is getPropertyName, the propertyName is lowerCamelCase
              * So just uppercase first character of the property, later on get and set{$methodName} wil be used
              */
-            if (!$accessor->isReadable($entity, $propertyName)) {
-                throw new \RuntimeException('Property could not be read.');
+
+
+            try {
+                if (!$accessor->isReadable($entity, $propertyName)) {
+                    throw new \RuntimeException('Property could not be read.');
+                }
+            } catch (EntityNotFoundException $exception){
+                continue;
             }
 
             $getInformation = $accessor->getValue($entity, $propertyName);
