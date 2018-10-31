@@ -15,6 +15,7 @@ use Paymaxi\DoctrineEncryptBundle\Encryptors\EncryptorInterface;
 use Paymaxi\DoctrineEncryptBundle\Services\PropertyFilter;
 use ReflectionClass;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**
  * Doctrine event subscriber which encrypt/decrypt entities
@@ -85,26 +86,33 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      * @param string $encryptorClass The encryptor class.  This can be empty if a service is being provided.
      * @param string $secretKey The secret key.
      * @param EncryptorInterface|NULL $service (Optional)  An EncryptorInterface.
+     * @param PropertyAccessorInterface|null $accessor
      *
-     * This allows for the use of dependency injection for the encrypters.
+     * @throws \ReflectionException
      */
     public function __construct(
         EntityManager $entityManager,
         $encryptorClass,
         $secretKey,
-        EncryptorInterface $service = null
+        EncryptorInterface $service = null,
+        PropertyAccessorInterface $accessor = null
     ) {
         $this->entityManager = $entityManager;
         $this->secretKey = $secretKey;
 
-        if ($service instanceof EncryptorInterface) {
+        if (!$service instanceof EncryptorInterface) {
             $this->encryptor = $service;
         } else {
             $this->encryptor = $this->encryptorFactory($encryptorClass, $secretKey);
         }
 
         $this->restoreEncryptor = $this->encryptor;
-        $this->accessor = new PropertyAccessor();
+
+        if (null === $accessor) {
+            $accessor = new PropertyAccessor();
+        }
+
+        $this->accessor = $accessor;
     }
 
     /**
@@ -263,7 +271,6 @@ class DoctrineEncryptSubscriber implements EventSubscriber
         /** @var \ReflectionProperty[] $properties */
         $properties = $this->loadProperties($class);
         $accessor = $this->accessor;
-
         //Check which operation to be used
         $encryptorMethod = $isEncryptOperation ? 'encrypt' : 'decrypt';
 
@@ -283,6 +290,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
             } catch (EntityNotFoundException $exception){
                 continue;
             }
+
 
             $getInformation = $accessor->getValue($entity, $propertyName);
 
