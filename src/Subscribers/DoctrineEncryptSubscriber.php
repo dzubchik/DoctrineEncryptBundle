@@ -100,7 +100,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
         $this->entityManager = $entityManager;
         $this->secretKey = $secretKey;
 
-        if (!$service instanceof EncryptorInterface) {
+        if ($service instanceof EncryptorInterface) {
             $this->encryptor = $service;
         } else {
             $this->encryptor = $this->encryptorFactory($encryptorClass, $secretKey);
