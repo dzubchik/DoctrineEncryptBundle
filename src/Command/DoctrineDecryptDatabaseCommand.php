@@ -18,13 +18,14 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
  */
 class DoctrineDecryptDatabaseCommand extends AbstractCommand
 {
+    public static $defaultName = 'doctrine:decrypt:database';
+
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
         $this
-            ->setName('doctrine:decrypt:database')
             ->setDescription('Decrypt whole database on tables which are encrypted')
             ->addArgument('encryptor', InputArgument::OPTIONAL, 'The encryptor you want to decrypt the database with', AES256Encryptor::METHOD_NAME)
             ->addArgument('batchSize', InputArgument::OPTIONAL, 'The update/flush batch size', 20);
@@ -33,7 +34,7 @@ class DoctrineDecryptDatabaseCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         //Get entity manager, question helper, subscriber service and annotation reader
         $question = $this->getHelper('question');
@@ -54,7 +55,7 @@ class DoctrineDecryptDatabaseCommand extends AbstractCommand
                     $output->writeln('Supported encryptors: '.implode(', ', array_keys($supportedExtensions)));
                     $output->writeln('You can also define your own class. (example: \Paymaxi\DoctrineEncryptBundle\Encryptors\AES256Encryptor)');
 
-                    return;
+                    return 0;
                 }
             }
         }
@@ -83,7 +84,7 @@ class DoctrineDecryptDatabaseCommand extends AbstractCommand
         );
 
         if (!$question->ask($input, $output, $confirmationQuestion)) {
-            return;
+            return 0;
         }
 
         //Start decrypting database
@@ -156,5 +157,7 @@ class DoctrineDecryptDatabaseCommand extends AbstractCommand
 
         //Say it is finished
         $output->writeln("\nDecryption finished values found: <info>".$valueCounter.'</info>, decrypted: <info>'.$this->subscriber->decryptCounter."</info>.\nAll values are now decrypted.");
+
+        return 0;
     }
 }

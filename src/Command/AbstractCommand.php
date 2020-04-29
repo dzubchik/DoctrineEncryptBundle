@@ -3,44 +3,35 @@ namespace Paymaxi\DoctrineEncryptBundle\Command;
 
 use Paymaxi\DoctrineEncryptBundle\Services\PropertyFilter;
 use Paymaxi\DoctrineEncryptBundle\Subscribers\DoctrineEncryptSubscriber;
-use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Command\Command;
 
 /**
  * Base command containing usefull base methods.
  *
  * @author Michael Feinbier <michael@feinbier.net>
  **/
-abstract class AbstractCommand extends ContainerAwareCommand
+abstract class AbstractCommand extends Command
 {
-
-    /**
-     * @var EntityManagerInterface
-     */
+    /** @var EntityManagerInterface */
     protected $entityManager;
 
-    /**
-     * @var DoctrineEncryptSubscriber
-     */
+    /** @var DoctrineEncryptSubscriber */
     protected $subscriber;
 
-    /**
-     * @var AnnotationReader
-     */
+    /** @var Reader */
     protected $annotationReader;
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function initialize(InputInterface $input, OutputInterface $output)
-    {
-        $container = $this->getContainer();
-        $this->entityManager = $container->get('doctrine.orm.entity_manager');
-        $this->annotationReader = $container->get('annotation_reader');
-        $this->subscriber = $container->get('paymaxi_doctrine_encrypt.subscriber');
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        DoctrineEncryptSubscriber $doctrineEncryptSubscriber,
+        Reader $annotationReader
+    ) {
+        parent::__construct();
+        $this->entityManager = $entityManager;
+        $this->subscriber = $doctrineEncryptSubscriber;
+        $this->annotationReader = $annotationReader;
     }
 
     /**
