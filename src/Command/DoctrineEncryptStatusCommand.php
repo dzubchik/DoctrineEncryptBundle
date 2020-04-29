@@ -13,6 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class DoctrineEncryptStatusCommand extends AbstractCommand
 {
+    public static $defaultName = 'doctrine:encrypt:status';
 
     /**
      * {@inheritdoc}
@@ -20,14 +21,13 @@ class DoctrineEncryptStatusCommand extends AbstractCommand
     protected function configure()
     {
         $this
-            ->setName('doctrine:encrypt:status')
             ->setDescription('Get status of doctrine encrypt bundle and the database');
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $metaDataArray = $this->entityManager->getMetadataFactory()->getAllMetadata();
 
@@ -53,5 +53,7 @@ class DoctrineEncryptStatusCommand extends AbstractCommand
 
         $output->writeln('');
         $output->writeln(sprintf('<info>%d</info> entities found which are containing <info>%d</info> encrypted properties.', \count($metaDataArray), $totalCount));
+
+        return 0;
     }
 }

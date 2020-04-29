@@ -11,3 +11,26 @@ services:
         arguments:
             - "%paymaxi_doctrine_encrypt.encryptor_class_name%"
             - "%paymaxi_doctrine_encrypt.secret_key%"
+
+
+    Paymaxi\DoctrineEncryptBundle\Command\AbstractCommand:
+        abstract:  true
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@paymaxi_doctrine_encrypt.subscriber'
+            - '@annotation_reader'
+
+    Paymaxi\DoctrineEncryptBundle\Command\DoctrineDecryptDatabaseCommand:
+        parent: Paymaxi\DoctrineEncryptBundle\Command\AbstractCommand
+        tags:
+            - { name: 'console.command' }
+
+    Paymaxi\DoctrineEncryptBundle\Command\DoctrineEncryptDatabaseCommand:
+        parent: Paymaxi\DoctrineEncryptBundle\Command\AbstractCommand
+        tags:
+            - { name: 'console.command' }
+
+    Paymaxi\DoctrineEncryptBundle\Command\DoctrineEncryptStatusCommand:
+        parent: Paymaxi\DoctrineEncryptBundle\Command\AbstractCommand
+        tags:
+            - { name: 'console.command' }

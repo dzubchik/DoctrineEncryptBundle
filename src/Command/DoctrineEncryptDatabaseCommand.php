@@ -18,6 +18,7 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
  */
 class DoctrineEncryptDatabaseCommand extends AbstractCommand
 {
+    public static $defaultName = 'doctrine:encrypt:database';
 
     /**
      * {@inheritdoc}
@@ -25,7 +26,6 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
     protected function configure()
     {
         $this
-            ->setName('doctrine:encrypt:database')
             ->setDescription('Encrypt whole database on tables which are not encrypted yet')
             ->addArgument('encryptor', InputArgument::OPTIONAL, 'The encryptor you want to decrypt the database with', AES256Encryptor::METHOD_NAME)
             ->addArgument('batchSize', InputArgument::OPTIONAL, 'The update/flush batch size', 20);
@@ -34,7 +34,7 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         //Get entity manager, question helper, subscriber service and annotation reader
         $question = $this->getHelper('question');
@@ -54,7 +54,7 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
                     $output->writeln('\nGiven encryptor does not exists');
                     $output->writeln('Supported encryptors: ' . implode(', ', array_keys($supportedExtensions)));
                     $output->writeln('You can also define your own class. (example: \Paymaxi\DoctrineEncryptBundle\Encryptors\AES256Encryptor)');
-                    return;
+                    return 0;
                 }
             }
         }
@@ -71,7 +71,7 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
         );
 
         if (!$question->ask($input, $output, $confirmationQuestion)) {
-            return;
+            return 0;
         }
 
         //Start decrypting database
@@ -103,5 +103,7 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
 
         //Say it is finished
         $output->writeln("\nEncryption finished. Values encrypted: <info>" . $this->subscriber->encryptCounter . " values</info>.\nAll values are now encrypted.");
+
+        return 0;
     }
 }
