@@ -34,9 +34,12 @@ class AES256Encryptor implements EncryptorInterface
     {
         $this->secretKey = md5($key);
         $this->encryptMethod = sprintf('%s-%s', self::METHOD_NAME, self::ENCRYPT_MODE);
-        $this->initializationVector = openssl_random_pseudo_bytes(
-            openssl_cipher_iv_length($this->encryptMethod)
-        );
+        $length = openssl_cipher_iv_length($this->encryptMethod);
+
+        if (0 !== (int)$length) {
+            $this->initializationVector = openssl_random_pseudo_bytes($length);
+        }
+
     }
 
     /**

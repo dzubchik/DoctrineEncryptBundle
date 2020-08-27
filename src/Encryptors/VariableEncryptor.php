@@ -27,9 +27,11 @@ class VariableEncryptor implements EncryptorInterface
     public function __construct($key)
     {
         $this->secretKey = md5($key);
-        $this->initializationVector = openssl_random_pseudo_bytes(
-            openssl_cipher_iv_length(self::ENCRYPT_METHOD)
-        );
+        $length = openssl_cipher_iv_length(self::ENCRYPT_METHOD);
+
+        if (0 !== (int)$length) {
+            $this->initializationVector = openssl_random_pseudo_bytes($length);
+        }
     }
 
     /**
