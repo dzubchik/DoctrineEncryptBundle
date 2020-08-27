@@ -1,4 +1,6 @@
-#DoctrineEncryptBundle
+# DoctrineEncryptBundle
+
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/paycoreio/DoctrineEncryptBundle/PHP%20Composer/master?style=flat-square)
 
 Bundle allows to create doctrine entities with fields that will be protected with 
 help of some encryption algorithm in database and it will be clearly for developer, because bundle is uses doctrine life cycle events
@@ -8,7 +10,7 @@ This is an fork from the original bundle created by vmelnik-ukrain (Many thanks 
 
 I improved several things, i make better use of the doctrine events. and it works with lazy loading (relationships)!
 This will be an long term project we will be working on with long-term support and backward compatibility. We are using this bundle in all our own symfony2 project.
-More about us can be found on our website. [Paymaxi.com](https://paymaxi.com)
+More about us can be found on our website. [paycore.io](https://paycore.io)
 
 ###What does it do exactly
 
@@ -56,17 +58,3 @@ This bundle is under the MIT license. See the complete license in the bundle
 ###Versions
 
 I'm using Semantic Versioning like described [here](http://semver.org)
-
-###Todos
-
-The following items will be done in order
-
-1. ~~Review of complete code + fixes/improvements and inline documentation (2.1.1)~~
-2. ~~Add support for the other doctrine relationships (manyToMany, ManyToOne) (2.2)~~
-4. ~~Recreate documentation (2.3)~~
-5. ~~Create example code (2.3)~~
-6. ~~Create an function to encrypt unencrypted database and vice versa (console command, migration, changed key, etc.) (2.4)~~
-7. Look for a posibility of automatic encryption of query parameters (2.5)
-8. Look for a posibility to override findOneBy for automatic encryption of parameters (2.6)
-9. Add support to encrypt data by reference to other property as key (Encrypt data specific to user with user key etc.) (2.7)
-10. Add [Format-preserving encryption](http://en.wikipedia.org/wiki/Format-preserving_encryption) for all data types [Doctrine documentation Types](http://doctrine-dbal.readthedocs.org/en/latest/reference/types.html) (3.0)
